@@ -1,61 +1,54 @@
-import json
 from datetime import datetime, timezone
 
 def utc_now():
     return datetime.now(timezone.utc).isoformat()
 
+def event_base(event_type, device_id, severity="info", data=None, extra=None):
+    payload = {
+        "type": event_type,
+        "deviceId": device_id,
+        "ts": utc_now(),
+        "source": "edgeDecider",
+        "severity": severity,
+        "data": data or {}
+    }
+    if extra:
+        payload.update(extra)
+    return payload
+
 def alarm_event(device_id, sensor_name, raw, state, severity="high"):
-    return {
-        "type": "alarm",
-        "state": state,  # raised | cleared | reminder
-        "deviceId": device_id,
-        "ts": utc_now(),
-        "source": "edgeDecider",
-        "severity": severity,
-        "data": {"sensor": sensor_name, "raw": raw}
-    }
+    return event_base(
+        "alarm",
+        device_id,
+        severity=severity,
+        data={"sensor": sensor_name, "raw": raw, "state": state}
+    )
 
-def intrusion_event(device_id, context, severity="high"):
-    return {
-        "type": "security.intrusion",
-        "deviceId": device_id,
-        "ts": utc_now(),
-        "source": "edgeDecider",
-        "severity": severity,
-        "data": context
-    }
+def state_event(device_id, name, state, value=None, armed=None, extra=None):
+    data = {"name": name, "state": state}
+    if value is not None:
+        data["value"] = value
+    if armed is not None:
+        data["armed"] = bool(armed)
+    if extra:
+        data.update(extra)
+    return event_base("state.change", device_id, severity="info", data=data)
 
-def arm_event(device_id, armed: bool):
-    return {
-        "type": "control.arm_state",
-        "deviceId": device_id,
-        "ts": utc_now(),
-        "source": "edgeDecider",
-        "status": "ARMED" if armed else "DISARMED"
-    }
+def intrusion_event(device_id, door_state, motion, armed):
+    return event_base(
+        "security.intrusion",
+        device_id,
+        severity="high",
+        data={"door": door_state, "motion": bool(motion), "armed": bool(armed)}
+    )
 
-def aggregate_event(device_id, window_sec, light_avg, temp_c, humidity):
+def aggregate_event(device_id, window_sec, system, sensors):
     return {
         "type": "aggregate",
         "deviceId": device_id,
         "ts": utc_now(),
         "source": "edgeDecider",
-        "window_sec": window_sec,
-        "data": {
-            "light_avg": light_avg,
-            "temp_c": temp_c,
-            "humidity": humidity
-        }
-    }
-
-def heartbeat_event(device_id, uptime_sec, last_input_age_sec, seq):
-    return {
-        "type": "heartbeat",
-        "deviceId": device_id,
-        "ts": utc_now(),
-        "source": "edgeDecider",
-        "status": "ok",
-        "uptime_sec": uptime_sec,
-        "last_input_age_sec": last_input_age_sec,
-        "seq": seq
+        "window_sec": int(window_sec),
+        "system": system,
+        "sensors": sensors
     }
