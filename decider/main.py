@@ -8,17 +8,17 @@ from azure.iot.device import IoTHubModuleClient, Message
 from decider.events import alarm_event, intrusion_event, arm_event, aggregate_event, heartbeat_event
 from decider.rules import calc_intrusion
 
-INPUT_NAME = os.getenv("EDGEDECIDER_INPUT", "input1")
-OUTPUT_NAME = os.getenv("EDGEDECIDER_OUTPUT", "output1")
+INPUT_NAME = os.getenv("ED_IN", os.getenv("EDGEDECIDER_INPUT", "input1"))
+OUTPUT_NAME = os.getenv("ED_OUT", os.getenv("EDGEDECIDER_OUTPUT", "output1"))
 
-AGGREGATE_WINDOW_SEC = int(os.getenv("EDGEDECIDER_AGG_WINDOW_SEC", "60"))
-HEARTBEAT_INTERVAL_SEC = int(os.getenv("EDGEDECIDER_HEARTBEAT_SEC", "300"))
-ALARM_COOLDOWN_SEC = int(os.getenv("EDGEDECIDER_ALARM_COOLDOWN_SEC", "60"))
+AGGREGATE_WINDOW_SEC = int(os.getenv("AGG_WIN_SEC", os.getenv("EDGEDECIDER_AGG_WINDOW_SEC", "60")))
+HEARTBEAT_INTERVAL_SEC = int(os.getenv("HB_SEC", os.getenv("EDGEDECIDER_HEARTBEAT_SEC", "300")))
+ALARM_COOLDOWN_SEC = int(os.getenv("ALARM_CD_SEC", os.getenv("EDGEDECIDER_ALARM_COOLDOWN_SEC", "60")))
 
 # ✅ Política B: publicar aggregates al cloud cada X segundos (por defecto 15 min)
-AGGREGATE_PUBLISH_INTERVAL_SEC = int(os.getenv("EDGEDECIDER_AGG_PUBLISH_SEC", "900"))
+AGGREGATE_PUBLISH_INTERVAL_SEC = int(os.getenv("AGG_PUB_SEC", os.getenv("EDGEDECIDER_AGG_PUBLISH_SEC", "900")))
 
-LOG_LEVEL = os.getenv("EDGEDECIDER_LOG_LEVEL", "INFO").upper()
+LOG_LEVEL = os.getenv("LOG", os.getenv("EDGEDECIDER_LOG_LEVEL", "INFO")).upper()
 
 logging.basicConfig(
     level=getattr(logging, LOG_LEVEL, logging.INFO),
